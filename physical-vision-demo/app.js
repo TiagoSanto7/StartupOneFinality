@@ -131,8 +131,9 @@ sensor.add(sensorHead);
 sensor.position.set(ZONE_B.x, 3.0, ZONE_B.z);
 scene.add(sensor);
 
+// Unit-radius ring, scaled per frame during the scan window instead of being reallocated.
 const scanRing = new THREE.Mesh(
-  new THREE.RingGeometry(0.05, 0.09, 48),
+  new THREE.RingGeometry(0.96, 1, 48),
   new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide })
 );
 scanRing.rotation.x = -Math.PI / 2;
@@ -194,15 +195,15 @@ function tick(now) {
   if (t >= T.descend1 && t < T.grabbed) {
     const p = ease(seg(t, T.descend1, T.grabbed));
     carY = lerp(railY, BOX_SIZE + 0.35, p);
-  } else if (t >= T.grabbed && t < T.travel + (T.travelEnd - T.travel)) {
-    carY = BOX_SIZE + 0.35;
   }
 
+  // Lift holds at its peak (BOX_SIZE/2 + 0.55) by the end of travel, matching the
+  // height the descend2 phase below starts from, so there is no pop at the handoff.
   if (t >= T.grabbed && t < T.travelEnd) {
     const p = ease(seg(t, T.travel, T.travelEnd));
     boxX = lerp(ZONE_A.x, FINAL_X, p);
     boxZ = lerp(ZONE_A.z, FINAL_Z, p);
-    boxY = lerp(BOX_SIZE / 2, BOX_SIZE / 2 + 0.55, Math.sin(p * Math.PI)) ;
+    boxY = BOX_SIZE / 2 + 0.55 * Math.sin(p * Math.PI / 2);
     carX = boxX; carY = boxY + 0.35;
   } else if (t >= T.travelEnd) {
     boxX = FINAL_X; boxZ = FINAL_Z; carX = FINAL_X;
@@ -237,8 +238,7 @@ function tick(now) {
     const p = seg(t, T.scanIn, T.scanOut);
     const cyclePos = (p * 2.4) % 1;
     const r = lerp(0.1, ZONE_B.halfW * 1.4, cyclePos);
-    scanRing.geometry.dispose();
-    scanRing.geometry = new THREE.RingGeometry(r, r + 0.03, 48);
+    scanRing.scale.setScalar(r);
     scanRing.material.opacity = (1 - cyclePos) * 0.7;
     sensorHead.material.emissive.set(0xffffff);
     sensorHead.material.emissiveIntensity = 0.4 + Math.sin(t * 0.02) * 0.2;
@@ -274,6 +274,7 @@ function tick(now) {
 
   renderer.render(scene, camera);
   if (t < T.loop) requestAnimationFrame(tick);
+  else play();
 }
 
 function play() {
