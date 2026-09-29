@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { requestRefund } from './client.js';
+import { requestRefund, readbackRefunds } from './client.js';
 
 function failure(code, message) {
   return Object.assign(new Error(message), { code });
@@ -67,7 +67,55 @@ export class AgentCommit {
     if (record?.state !== 'COMMITTED') {
       throw failure('CONTINUATION_BLOCKED', 'Action has no confirmed outcome; continuation blocked');
     }
-    return record;
+    return { ...record, decision: 'MAY_ADVANCE' };
+  }
+
+  async reconcile(actionId) {
+    const record = this.locked(actionId, () => {
+      const current = this.get(actionId);
+      if (!current) throw failure('ACTION_NOT_FOUND', 'No action to reconcile');
+      if (current.intent.providerUrl !== this.providerUrl) {
+        throw failure('INTENT_CONFLICT', 'Readback must use the original provider');
+      }
+      if (current.state === 'COMMITTED') return current;
+      if (!['UNKNOWN', 'NEEDS_REVIEW'].includes(current.state)) {
+        throw failure('RECONCILIATION_BLOCKED', `Cannot reconcile ${current.state}`);
+      }
+      current.reconciliations ??= [];
+      current.reconciliations.push({ startedAt: new Date().toISOString() });
+      this.transition(current, 'RECONCILING');
+      return current;
+    });
+    if (record.state === 'COMMITTED') return record;
+
+    let evidence;
+    let readError;
+    try { evidence = await readbackRefunds(this.providerUrl, actionId, this.timeoutMs); }
+    catch (error) { readError = error; }
+    return this.locked(actionId, () => {
+      const current = this.get(actionId);
+      const audit = current.reconciliations.at(-1);
+      audit.completedAt = new Date().toISOString();
+      if (readError) {
+        audit.error = readError.message;
+        this.transition(current, 'UNKNOWN');
+        return current;
+      }
+      // Exactly one matching receipt is required. Absence is not proof of failure.
+      const refunds = evidence?.refunds;
+      const receipt = Array.isArray(refunds) && refunds.length === 1 ? refunds[0] : null;
+      audit.evidence = evidence;
+      if (!receipt || receipt.actionId !== actionId
+        || receipt.amountCents !== current.intent.input.amountCents
+        || typeof receipt.refundId !== 'string' || !receipt.refundId) {
+        audit.reason = 'Evidence must contain exactly one matching refund';
+        this.transition(current, 'NEEDS_REVIEW');
+        return current;
+      }
+      current.receipt = receipt;
+      this.transition(current, 'COMMITTED');
+      return current;
+    });
   }
 
   async execute(input) {

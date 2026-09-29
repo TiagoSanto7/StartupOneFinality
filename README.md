@@ -38,9 +38,23 @@ npm run demo:protected
 
 A camada `AgentCommit` fica entre caller e provider. Ela persiste um `EffectCommitRecord` com `effect_id`, intenção canônica, tentativas de envio e histórico de estados. O caller deve reutilizar o mesmo `actionId` para a mesma ação lógica; mudar esse identificador representa uma nova ação. Reutilizá-lo com outro valor ou provider gera `INTENT_CONFLICT`.
 
-Antes do envio, a camada salva `PREPARED → DISPATCHED`. Se a resposta se perder, salva `UNKNOWN`. Uma segunda chamada retorna `RETRY_BLOCKED` sem enviar outro refund. `assertMayAdvance(actionId)` também bloqueia a continuação dependente. A demo imprime **R$800** lendo o ledger para comprovação externa; a camada permanece em **UNKNOWN**, pois ainda não consultou a evidência do provider.
+Antes do envio, a camada salva `PREPARED → DISPATCHED`. Se a resposta se perder, salva `UNKNOWN`. Uma segunda chamada retorna `RETRY_BLOCKED` sem enviar outro refund. `assertMayAdvance(actionId)` também bloqueia a continuação dependente. A demo agora segue com a reconciliação da ST-17 para resolver esse estado.
 
-Uma resposta válida recebida normalmente permite `COMMITTED`; chamadas repetidas retornam o registro confirmado sem novo envio. A reconciliação de resultados ambíguos é a ST-17. O painel comparativo é a ST-18.
+Uma resposta válida recebida normalmente permite `COMMITTED`; chamadas repetidas retornam o registro confirmado sem novo envio. O painel comparativo é a ST-18.
+
+## ST-17: reconciliação e continuação
+
+`npm run demo:protected` demonstra o fluxo completo: `PREPARED → DISPATCHED → UNKNOWN → RECONCILING → COMMITTED`, seguido da decisão `MAY_ADVANCE`. O total aplicado permanece **R$800**, com uma única tentativa de envio.
+
+`await gate.reconcile(actionId)` consulta `GET /refunds?actionId=...` no provider original. O endpoint lê o ledger persistido e retorna todos os refunds dessa ação, sem aplicar novos efeitos. A confirmação exige exatamente uma entrada com identidade, valor e identificador de refund válidos. A evidência e o histórico da reconciliação ficam persistidos no registro.
+
+- Evidência suficiente: `COMMITTED`; `gate.assertMayAdvance(actionId)` retorna o registro com `decision: 'MAY_ADVANCE'`.
+- Evidência ausente, duplicada ou divergente: `NEEDS_REVIEW`; retry e continuação continuam bloqueados. Um resultado vazio não prova que a ação falhou.
+- Falha ao consultar o provider: volta a `UNKNOWN`, com o erro registrado; outra consulta pode ser tentada.
+- Durante `RECONCILING`, bloqueia envios, continuação e outra reconciliação concorrente. Após uma interrupção nesse estado, é necessária revisão manual; esta versão não implementa recuperação automática dessa consulta interrompida.
+- `DISPATCHED` não pode ser reconciliado enquanto o envio pode estar em andamento. A recuperação desse estado após uma interrupção também continua exigindo revisão manual.
+
+Os testes exercitam a consulta HTTP, confirmação persistida, bloqueios durante a consulta, ausência/duplicidade/divergência de evidência, falha de leitura e recuperação posterior. O contrato do simulador supõe leitura completa e autoritativa do ledger, sem paginação; integrações reais exigiriam contratos próprios de evidência e consistência.
 
 Os registros ficam em `.demo/protected-*/effects`. Para preservar identidade após reiniciar, reutilize o diretório de registros e o mesmo endereço do provider. Cada execução da demo usa um diretório novo para isolar o cenário.
 
