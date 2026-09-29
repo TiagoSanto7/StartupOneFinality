@@ -5,6 +5,7 @@
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": {
+    "demo:protected": "node src/protected-demo.js",
     "demo": "node src/demo.js",
     "test": "node --test"
   }

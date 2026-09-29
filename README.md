@@ -28,4 +28,28 @@ O log mostra commit, perda da resposta, timeout e retry nessa ordem. Cada execu�
 
 O ledger representa o efeito financeiro aplicado; não há integração com um gateway nem movimentação de dinheiro real. A falha é injetada **depois** da gravação, deixando a conexão sem resposta até o caller expirar. Não é um timeout anterior ao commit nem um erro HTTP devolvido pelo provider.
 
-Este é um simulador local, de um processo, sem autenticação, adequado apenas à reprodução. A primeira resposta é suprimida por instância do servidor. Não implementa Agent Commit, idempotência, reconciliação ou retry gate: o cliente é deliberadamente ingênuo para expor o problema que as próximas tarefas vão resolver.
+Este é um simulador local, sem autenticação, adequado apenas à reprodução. A primeira resposta é suprimida por instância do servidor. O comando `demo` mantém o cliente deliberadamente ingênuo da ST-15.
+
+## ST-16: identidade persistente e bloqueio de retry
+
+```sh
+npm run demo:protected
+```
+
+A camada `AgentCommit` fica entre caller e provider. Ela persiste um `EffectCommitRecord` com `effect_id`, intenção canônica, tentativas de envio e histórico de estados. O caller deve reutilizar o mesmo `actionId` para a mesma ação lógica; mudar esse identificador representa uma nova ação. Reutilizá-lo com outro valor ou provider gera `INTENT_CONFLICT`.
+
+Antes do envio, a camada salva `PREPARED → DISPATCHED`. Se a resposta se perder, salva `UNKNOWN`. Uma segunda chamada retorna `RETRY_BLOCKED` sem enviar outro refund. `assertMayAdvance(actionId)` também bloqueia a continuação dependente. A demo imprime **R$800** lendo o ledger para comprovação externa; a camada permanece em **UNKNOWN**, pois ainda não consultou a evidência do provider.
+
+Uma resposta válida recebida normalmente permite `COMMITTED`; chamadas repetidas retornam o registro confirmado sem novo envio. A reconciliação de resultados ambíguos é a ST-17. O painel comparativo é a ST-18.
+
+Os registros ficam em `.demo/protected-*/effects`. Para preservar identidade após reiniciar, reutilize o diretório de registros e o mesmo endereço do provider. Cada execução da demo usa um diretório novo para isolar o cenário.
+
+### Persistência e limites
+
+- Escrita em arquivo temporário com `fsync`, seguida de renomeação; leitores encontram um registro completo.
+- Um diretório de lock por ação serializa as alterações entre instâncias que compartilham o mesmo armazenamento local. Durante a chamada HTTP, `DISPATCHED` já bloqueia outros envios.
+- Se o processo parar após persistir `DISPATCHED`, a ação continua bloqueada. Se parar segurando um lock, esse lock exige inspeção manual com os processos parados; não há expiração automática que possa liberar um retry inseguro.
+- Erros após dispatch são tratados conservadoramente como `UNKNOWN`. Falhas de armazenamento propagam erro e não autorizam continuação.
+- Não é armazenamento distribuído nem uma garantia contra falha física de disco/energia. A aplicação precisa passar todos os envios por esta camada e chamar o gate antes de continuar; ela não intercepta chamadas que a contornem.
+
+Os testes incluem perda de resposta, identidade após recarregar o armazenamento, chamadas concorrentes, intenção conflitante, reutilização de resposta confirmada, recuperação de `DISPATCHED` e falhas locais de armazenamento.
