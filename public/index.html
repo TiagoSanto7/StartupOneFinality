@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent Commit | Action Finality</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body><main>
+  <header><a class="brand" href="/">▣ <span>AGENT COMMIT</span></a><span class="eyebrow">ACTION FINALITY / DEMO 01</span><span class="local"><i></i> Simulador local</span></header>
+  <section class="intro"><div><p class="eyebrow">UMA INTENÇÃO. DOIS DESFECHOS.</p><h1>Timeout não significa<br>que a ação falhou.</h1><p class="lead">O estorno aconteceu. A resposta se perdeu.<br>Repetir sem verificar pode custar o dobro.</p></div><aside><span>INTENÇÃO ORIGINAL</span><strong>R$ 800<span>,00</span></strong><p>Mesmo pedido · mesma falha após o commit</p></aside></section>
+  <div class="toolbar"><div><button id="run">Executar comparação <span>↗</span></button><button id="replay" class="secondary" disabled>Rever timeline</button><button id="download" class="secondary" disabled>Baixar evidência ↓</button></div><p id="status" role="status" aria-live="polite">Pronto para executar os dois cenários.</p></div>
+  <section class="comparison" aria-label="Comparação dos cenários">
+    <article class="panel naive"><div class="panel-heading"><div><p class="eyebrow">01 / SEM PROTEÇÃO</p><h2>Retry ingênuo</h2></div><span class="badge" id="naive-badge">Aguardando</span></div><div class="metric"><strong id="naive-total">—</strong><span id="naive-count">Nenhum resultado ainda</span></div><p class="explanation">Um timeout vira uma nova tentativa de estorno.</p><ol id="naive-events" class="timeline"></ol></article>
+    <article class="panel protected"><div class="panel-heading"><div><p class="eyebrow">02 / COM AGENT COMMIT</p><h2>Verificar antes de repetir</h2></div><span class="badge" id="protected-badge">Aguardando</span></div><div class="metric"><strong id="protected-total">—</strong><span id="protected-count">Nenhum resultado ainda</span></div><p class="explanation">O resultado incerto bloqueia o retry até a confirmação.</p><ol id="protected-events" class="timeline"></ol></article>
+  </section>
+  <section class="verdict"><span class="eyebrow">A DIFERENÇA</span><p id="verdict">Confirmar o efeito antes de autorizar o próximo passo.</p><span id="run-id">HTTP real · persistência em disco</span></section>
+  <footer><span>STARTUP ONE / AGENT COMMIT</span><span>Demonstração técnica. Nenhum dinheiro real é movimentado.</span></footer>
+</main></body></html>

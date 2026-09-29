@@ -1,5 +1,27 @@
 # StartupOneFinality
 
+## Painel visual — ST-18
+
+```sh
+npm run demo:ui
+```
+
+Abra **http://127.0.0.1:3000** e clique em **Executar comparação**. Requer Node.js 22+, sem instalação de dependências. Para encerrar, use Ctrl+C no terminal. Se a porta estiver ocupada, no PowerShell use `$env:PORT=3001; npm run demo:ui` e abra a porta escolhida.
+
+Cada execução inicia dois providers HTTP independentes, executa os fluxos reais das ST-15/16/17 e verifica os totais nos ledgers. O painel mostra **R$1.600 / dois estornos** sem proteção e **R$800 / um estorno / MAY_ADVANCE** com Agent Commit. Nenhum dinheiro real é movimentado.
+
+A timeline reproduz os eventos registrados **depois** da execução; a animação não é telemetria ao vivo nem uma escala de tempo entre os dois cenários. **Rever timeline** repete apenas a apresentação; **Executar novamente** cria outra execução isolada. **Baixar evidência** exporta o resultado em JSON, incluindo eventos, refunds e o registro protegido.
+
+Os ledgers, registros e `comparison.json` ficam em `.demo/comparison-*`. O servidor atende apenas em loopback e aceita uma comparação por vez. Falhas de execução aparecem na interface e no terminal, sem apresentar um resultado de sucesso.
+
+### Material para o pitch
+
+Captura de uma execução real: [docs/st-18-panel.png](docs/st-18-panel.png). Para gravar, abra o painel, execute a comparação e use **Rever timeline**. A captura mostra os totais e os estados até MAY_ADVANCE. A interface funciona em desktop e em telas estreitas, respeitando a preferência de movimento reduzido.
+
+![Demo comparativa](docs/st-18-panel.png)
+
+O teste HTTP do painel verifica os totais, a sequência protegida, persistência do JSON, isolamento entre execuções, recusa de execução simultânea e bloqueio de origem externa. Execute `npm test` para a suíte completa.
+
 Primeiro artefato técnico — [ST-15](https://linear.app/tiago-santo/issue/ST-15): reproduzir **commit → lost response → timeout → retry → R$1.600**.
 
 ## Executar
