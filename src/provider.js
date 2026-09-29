@@ -11,6 +11,17 @@ export function readLedger(path) {
 export async function startProvider({ ledgerPath, loseFirstResponse = true, onEvent = () => {} }) {
   let committed = 0;
   const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url, 'http://localhost');
+    if (req.method === 'GET' && url.pathname === '/refunds') {
+      const actionId = url.searchParams.get('actionId');
+      if (!actionId) { res.writeHead(400).end('Missing actionId'); return; }
+      try {
+        const refunds = readLedger(ledgerPath).filter(refund => refund.actionId === actionId);
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ refunds }));
+      } catch { res.writeHead(500).end('Readback failed'); }
+      return;
+    }
     if (req.method !== 'POST' || req.url !== '/refunds') {
       res.writeHead(404).end();
       return;

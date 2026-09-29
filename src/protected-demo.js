@@ -19,9 +19,12 @@ try {
   catch (error) { if (error.code !== 'RETRY_BLOCKED') throw error; console.log(error.code); }
   try { gate.assertMayAdvance(input.actionId); }
   catch (error) { if (error.code !== 'CONTINUATION_BLOCKED') throw error; console.log(error.code); }
+  const resolved = await gate.reconcile(input.actionId);
+  console.log(resolved.history.map(event => event.state).join(' → '));
+  console.log(gate.assertMayAdvance(input.actionId).decision);
   const ledger = readLedger(ledgerPath);
   const total = ledger.reduce((sum, item) => sum + item.amountCents, 0);
-  if (ledger.length !== 1 || total !== 80000 || record.state !== 'UNKNOWN') throw new Error('Unexpected result');
-  console.log('Total aplicado no provider: R$800 (1 refund). A camada continua em UNKNOWN.');
+  if (ledger.length !== 1 || total !== 80000 || resolved.state !== 'COMMITTED') throw new Error('Unexpected result');
+  console.log('Total aplicado no provider: R$800 (1 refund). Evidência confirmada; workflow pode avançar.');
   console.log(`Arquivos: ${directory}`);
 } finally { await provider.close(); }

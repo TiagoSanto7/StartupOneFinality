@@ -1,5 +1,13 @@
 import http from 'node:http';
 
+export async function readbackRefunds(providerUrl, actionId, timeoutMs = 1000) {
+  const url = new URL(providerUrl);
+  url.searchParams.set('actionId', actionId);
+  const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
+  if (!response.ok) throw new Error(`Readback HTTP ${response.status}`);
+  return response.json();
+}
+
 export function requestRefund(url, refund, timeoutMs = 1000) {
   return new Promise((resolve, reject) => {
     const req = http.request(url, { method: 'POST', headers: { 'content-type': 'application/json' } }, res => {
