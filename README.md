@@ -1,5 +1,13 @@
 # StartupOneFinality
 
+## [OPCIONAL] Visão futura — Physical AI (ST-27)
+
+```sh
+npm run demo:physical
+```
+
+Simulação visual curta e conceitual, sem relação com o MVP: um robô move uma caixa, o controller reporta sucesso, mas a verificação encontra a caixa fora da Zone B (`NOT_VERIFIED` → `REPLAN`). Ilustra a mesma control question do Agent Commit no mundo físico, apenas para o slide de roadmap. **Não representa robótica funcionando hoje.** Detalhes em [physical-vision-demo/README.md](physical-vision-demo/README.md).
+
 ## Painel visual — ST-18
 
 ```sh
