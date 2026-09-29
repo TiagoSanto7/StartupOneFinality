@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Physical AI | Verified Action Finality — Future Vision</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0b1012; --surface:#11191c; --line:#293438; --muted:#9baeb4;
+    --mint:#a6efca; --red:#ffa28c; --amber:#ffd479;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#f2f5f3;font-family:Arial,Helvetica,sans-serif}
+  main{max-width:1200px;padding:30px 48px 48px;margin:auto}
+  header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:23px;flex-wrap:wrap;gap:10px}
+  .brand{color:var(--mint);font-size:23px;text-decoration:none;display:flex;gap:12px;align-items:center}
+  .brand span{font-size:14px;letter-spacing:2px;font-weight:700}
+  .eyebrow{font-size:11px;letter-spacing:1.7px;color:var(--muted);font-weight:700}
+  .vision-tag{font-size:11px;letter-spacing:1.4px;color:var(--amber);border:1px solid #4a3f28;background:#1c170e;border-radius:30px;padding:6px 12px;font-weight:700}
+  .intro{padding:26px 0 20px}
+  h1{font-size:clamp(26px,3vw,38px);font-weight:500;line-height:1.15;letter-spacing:-1.2px;margin:12px 0}
+  .lead{font-size:14px;line-height:1.6;color:var(--muted);margin:0;max-width:720px}
+  .question{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--muted)}
+  .question b{color:#dbe6e2;font-weight:600}
+
+  .stage{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:radial-gradient(120% 140% at 50% 20%,#141d20 0%,#0b1012 70%);margin-top:22px}
+  .stage canvas{display:block;width:100%;height:100%}
+  .stage-inner{position:relative;width:100%;aspect-ratio:16/10}
+
+  .pill{position:absolute;top:16px;left:16px;font-size:10px;letter-spacing:1.3px;color:var(--amber);border:1px solid #4a3f28;background:rgba(20,17,10,.82);border-radius:30px;padding:7px 12px;font-weight:700;pointer-events:none;z-index:5}
+  .runid{position:absolute;top:16px;right:16px;font-size:10px;color:var(--muted);background:rgba(11,16,18,.7);border:1px solid var(--line);border-radius:30px;padding:7px 12px;pointer-events:none;z-index:5}
+
+  .overlay{position:absolute;left:50%;bottom:14%;transform:translate(-50%,10px);text-align:center;opacity:0;transition:opacity .35s ease,transform .35s ease;pointer-events:none;z-index:4;width:90%}
+  .overlay.show{opacity:1;transform:translate(-50%,0)}
+  .overlay .tag{font-size:11px;letter-spacing:2px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
+  .overlay .big{font-size:clamp(22px,3.4vw,34px);font-weight:600;letter-spacing:-.5px}
+  .overlay.neutral .big{color:#f2f5f3}
+  .overlay.good .tag{color:var(--mint)}
+  .overlay.good .big{color:var(--mint)}
+  .overlay.bad .tag{color:var(--red)}
+  .overlay.bad .big{color:var(--red)}
+  .overlay.warn .tag{color:var(--amber)}
+  .overlay.warn .big{color:var(--amber)}
+  .overlay .rows{display:flex;gap:26px;justify-content:center;font-size:13px;margin-top:4px}
+  .overlay .rows div span{display:block;font-size:10px;letter-spacing:1.4px;color:var(--muted);margin-bottom:4px}
+  .overlay .rows .observed{color:var(--red);font-weight:700}
+  .overlay .rows .expected{color:#dbe6e2;font-weight:600}
+
+  .footer-caption{position:absolute;left:16px;bottom:14px;font-size:11px;color:var(--muted);z-index:5;max-width:70%;line-height:1.5}
+  .footer-caption b{color:#dbe6e2}
+
+  .toolbar{display:flex;gap:18px;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap}
+  button{border:1px solid var(--mint);background:var(--mint);color:#12241c;font:600 12px Arial;padding:12px 20px;border-radius:5px;cursor:pointer}
+  button:focus-visible{outline:2px solid white;outline-offset:4px}
+  #status{color:var(--muted);font-size:12px}
+
+  footer{display:flex;justify-content:space-between;padding-top:24px;margin-top:18px;border-top:1px solid var(--line);font-size:10px;letter-spacing:.7px;color:var(--muted);flex-wrap:wrap;gap:10px}
+
+  @media(max-width:760px){
+    main{padding:20px}
+    header .eyebrow{display:none}
+    .question{flex-direction:column;gap:6px}
+    .overlay .rows{flex-direction:column;gap:8px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .overlay{transition:none}
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="brand">▣ <span>VERIFIED ACTION FINALITY</span></span>
+    <span class="eyebrow">STARTUP ONE / ST-27</span>
+    <span class="vision-tag">FUTURE VISION · PHYSICAL AI</span>
+  </header>
+
+  <section class="intro">
+    <p class="eyebrow">EXTENSÃO CONCEITUAL — NÃO É O PRODUTO ATUAL</p>
+    <h1>O controller terminar não significa<br>que o estado esperado do mundo foi atingido.</h1>
+    <p class="lead">Esta é a mesma control question do Agent Commit, aplicada a um cenário físico hipotético: antes de deixar um sistema autônomo avançar, é preciso verificar o estado real — não apenas confiar que a ação terminou.</p>
+    <div class="question">
+      <span><b>Digital hoje:</b> o refund realmente aconteceu?</span>
+      <span><b>Físico amanhã:</b> a caixa realmente chegou onde precisava?</span>
+    </div>
+  </section>
+
+  <div class="stage" role="img" aria-label="Simulação: um robô move uma caixa até a Zona B, o controller reporta sucesso, mas a verificação encontra a caixa fora da zona e retorna NOT_VERIFIED, com a próxima ação sendo REPLAN.">
+    <div class="stage-inner" id="stage">
+      <span class="pill">FUTURE VISION — CONCEPTUAL EXTENSION, NÃO É O PRODUTO ATUAL</span>
+      <span class="runid">Simulação local · sem robô real</span>
+
+      <div class="overlay neutral" id="ov-task"><span class="tag">TASK</span><span class="big">“Move box to Zone B”</span></div>
+      <div class="overlay good" id="ov-controller"><span class="tag">CONTROLLER</span><span class="big">SUCCESS</span></div>
+      <div class="overlay bad" id="ov-verify">
+        <span class="tag">VERIFICATION</span>
+        <div class="rows">
+          <div><span>EXPECTED</span><span class="expected">box ∈ Zone B</span></div>
+          <div><span>OBSERVED</span><span class="observed">false</span></div>
+        </div>
+      </div>
+      <div class="overlay bad" id="ov-finality"><span class="tag">FINALITY</span><span class="big">NOT_VERIFIED</span></div>
+      <div class="overlay warn" id="ov-next"><span class="tag">NEXT ACTION</span><span class="big">REPLAN</span></div>
+
+      <div class="footer-caption">Verified Action Finality (visão futura): <b>ACTION → OBSERVATION → EVIDENCE → VERDICT → ADVANCE / RETRY / REPLAN / ESCALATE.</b></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="replay">Rever simulação ↻</button>
+    <p id="status" role="status" aria-live="polite">Reproduzindo automaticamente…</p>
+  </div>
+
+  <footer>
+    <span>STARTUP ONE / VERIFIED ACTION FINALITY</span>
+    <span>Simulação conceitual. Nenhum robô real é controlado por este código. Não representa um produto de robótica atual.</span>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

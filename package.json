@@ -8,6 +8,7 @@
     "demo:ui": "node src/dashboard.js",
     "demo:protected": "node src/protected-demo.js",
     "demo": "node src/demo.js",
+    "demo:physical": "node physical-vision-demo/server.js",
     "test": "node --test"
   }
 }
